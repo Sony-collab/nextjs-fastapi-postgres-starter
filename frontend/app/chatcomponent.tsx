@@ -13,7 +13,6 @@ type Content = {
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export function ChatComponent({ userId }: User) {
-  const [botMessage, setBotMessage] = useState();
   const [messages, setMessages] = useState<Content[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
@@ -21,6 +20,21 @@ export function ChatComponent({ userId }: User) {
   const handleInputChange = (event: any) => {
     setInput(event.target.value);
   };
+
+  useEffect(() => {
+    const getMessages = async () => {
+      const response = await fetch(`${apiUrl}/messages/${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      setMessages(data);
+      scrollToBottom();
+    };
+    getMessages();
+  }, []);
 
   const handleSendMessage = async () => {
     if (input.trim() === "") return;
@@ -35,12 +49,13 @@ export function ChatComponent({ userId }: User) {
         body: JSON.stringify({ content: input, user: userId }),
       });
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error("Network response was not ok");
       }
 
       const data = await response.json();
-      setBotMessage(data);
+      setMessages(data)
+      scrollToBottom();
     } catch (error) {
       console.error("Error:", error);
     }
@@ -52,7 +67,7 @@ export function ChatComponent({ userId }: User) {
         <p
           style={{
             display: "flex",
-            justifyContent: is_bot ? "flex-end" : "flex-start",
+            justifyContent: is_bot ? "flex-start" : "flex-end",
             padding: 10,
           }}
         >
@@ -67,22 +82,6 @@ export function ChatComponent({ userId }: User) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-  
-  useEffect(() => {
-    const getMessages = async () => {
-      const response = await fetch(`${apiUrl}/messages/${userId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-      setMessages(data);
-    };
-    console.log("function called");
-    getMessages();
-    scrollToBottom();
-  }, [botMessage]);
 
   return (
     <>
@@ -111,7 +110,7 @@ export function ChatComponent({ userId }: User) {
             placeholder="Type your message..."
             value={input}
             onChange={handleInputChange}
-            style={{ width: "100%" }}
+            style={{ width: "100%", color:'black' }}
           />
           <button
             style={{ marginLeft: 30, padding: "0 10px", border: "2px solid" }}

@@ -46,12 +46,12 @@ async def create_message(message: MessageCreate):
                     raise HTTPException(status_code=404, detail="User not found")
 
                 # Create new message
-                new_message = Message(content=message.content, user_id=user.id, is_bot=True)
+                new_message = Message(content=message.content, user_id=user.id, is_bot=False)
                 session.add(new_message)
 
                 # Simulate chatbot response
                 chatbot_response_content = random.choice(chatbot_responses)
-                chatbot_response = Message(content=chatbot_response_content, user_id=user.id, is_bot=False)
+                chatbot_response = Message(content=chatbot_response_content, user_id=user.id, is_bot=True)
                 session.add(chatbot_response)
                 result = await session.execute(select(Message)
                                                .where(User.id == user.id)
@@ -75,6 +75,7 @@ async def create_message(message: MessageCreate):
         print(e)
 
 
+# get messages by user id
 @app.get("/messages/{id}", response_model=List[MessageRead])
 async def get_messages(id: int):
     async with AsyncSession(engine) as session:
